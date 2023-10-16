@@ -1,6 +1,4 @@
-import moment from 'moment'
 import { Model, Schema } from 'mongoose'
-import { envstr } from '../../services/env'
 import { postDeleteMany, saveInvolvedIds } from './middlewares/deleteMany'
 import { postDelete } from './middlewares/postDelete'
 import { postSave } from './middlewares/postSave'
@@ -9,6 +7,9 @@ import { postUpdateMany } from './middlewares/updateMany'
 import { OpeserOptions } from './types/OpeserOptions'
 import OpenSearchClient from './utils/OpenSearchClient'
 import PluginOptions = OpeserOptions.PluginOptions
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 export const Opesergoose = async <DocumentType>(
   schema: Schema<DocumentType>,
@@ -16,7 +17,7 @@ export const Opesergoose = async <DocumentType>(
 ) => {
   const { mapProperties, index, populations, forbiddenFields } = options
 
-  const indexWithPrefix = `${envstr('OPENSEARCH_INDEX_PREFIX')}${index}`
+  const indexWithPrefix = `${process.env['OPENSEARCH_INDEX_PREFIX'] || ''}${index}`
 
   schema.pre(['updateMany', 'updateOne', 'deleteMany', 'deleteOne'], saveInvolvedIds())
 
@@ -28,7 +29,7 @@ export const Opesergoose = async <DocumentType>(
     postUpdateMany(indexWithPrefix, populations, forbiddenFields)
   )
 
-  schema.post(['remove', 'findOneAndDelete', 'findOneAndRemove'], postDelete(indexWithPrefix))
+  schema.post(['findOneAndDelete', 'findOneAndRemove'], postDelete(indexWithPrefix))
   schema.post(['deleteMany', 'deleteOne'], postDeleteMany(indexWithPrefix))
 
   schema.static('opeserIntegrity', async function (this: Model<any>) {
@@ -38,7 +39,7 @@ export const Opesergoose = async <DocumentType>(
         index: `${indexWithPrefix}_*`,
       })
 
-      const createdIndexName = `${indexWithPrefix}_${moment().unix()}`
+      const createdIndexName = `${indexWithPrefix}_${Date.now()}`
 
       // Update or create index and mapping
       if (Object.keys(foundIndexes).length) {
@@ -69,15 +70,17 @@ export const Opesergoose = async <DocumentType>(
 
             if (documents.length) {
               const body = documents.flatMap(({ _id, __v, ...body }) => [
-                { delete: { _index: foundIndex, _id: _id.toString() } },
-                { index: { _index: createdIndexName, _id: _id.toString() } },
+                { delete: { _index: foundIndex, _id: String(_id) } },
+                { index: { _index: createdIndexName, _id: String(_id) } },
                 body,
               ])
 
               await OpenSearchClient.instance.bulk({ body, refresh: true })
             }
 
-            await OpenSearchClient.instance.indices.delete({ index: foundIndex })
+            await OpenSearchClient.instance.indices.delete({
+              index: foundIndex,
+            })
 
             console.info(
               `index [${foundIndex}] was deleted. A new index [${createdIndexName}] was created and ${documents.length} documents were added`
@@ -103,7 +106,7 @@ export const Opesergoose = async <DocumentType>(
 
         if (documents.length) {
           const body = documents.flatMap(({ _id, __v, ...rest }) => [
-            { index: { _index: createdIndexName, _id: _id.toString() } },
+            { index: { _index: createdIndexName, _id: String(_id) } },
             rest,
           ])
 
