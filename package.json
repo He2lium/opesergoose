@@ -1,0 +1,24 @@
+{
+  "name": "opesergoose",
+  "version": "1.0.0",
+  "description": "Mongoose plugin for OpenSearch",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.7.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "moment": "^2.29.4",
+    "mongoose": "^7.6.2"
+  }
+}
