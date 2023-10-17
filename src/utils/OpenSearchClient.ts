@@ -1,24 +1,18 @@
 import { Client, ClientOptions } from '@opensearch-project/opensearch'
 
-class OpenSearchClient extends Client {
+class OpenSearchClient {
   private static _instance: Client
-
-  // TODO: remove
-  private static config: ClientOptions
-  constructor(connection?: Client | ClientOptions) {
-    if (connection instanceof Client) OpenSearchClient._instance = connection
-    else super(connection || OpenSearchClient.config || { node: process.env.OPENSEARCH_HOST })
-  }
+  private static config: ClientOptions = { node: process.env.OPENSEARCH_HOST }
 
   public static get instance() {
     if (this._instance) return this._instance
-    this._instance = new OpenSearchClient()
+    this._instance = new Client(this.config)
     return this._instance
   }
 
-  // TODO: remove
-  public static setConfig(config: ClientOptions) {
-    this.config = config
+  public static setConfig(connection: Client | ClientOptions) {
+    if (connection instanceof Client) OpenSearchClient._instance = connection
+    else OpenSearchClient.config = connection
   }
 }
 
