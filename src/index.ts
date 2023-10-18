@@ -7,9 +7,10 @@ import {postUpdateMany} from './middlewares/updateMany'
 import {OpeserOptions} from './types/OpeserOptions'
 import PluginOptions = OpeserOptions.PluginOptions
 import {Client} from "@opensearch-project/opensearch";
+import {OpeserModelType} from "./types/OpeserModel.type";
 
 
-export const OpesergooseFactory =
+const OpesergooseFactory =
     (openSearchClient: Client) =>
         async <DocumentType>(
             schema: Schema<DocumentType>,
@@ -21,7 +22,7 @@ export const OpesergooseFactory =
 
             schema.pre(['updateMany', 'updateOne', 'deleteMany', 'deleteOne'], saveInvolvedIds())
 
-            schema.post(['save'], postSave(openSearchClient,indexWithPrefix, populations, forbiddenFields))
+            schema.post(['save'], postSave(openSearchClient, indexWithPrefix, populations, forbiddenFields))
             schema.post(['findOneAndUpdate'], postUpdate(openSearchClient, indexWithPrefix, populations, forbiddenFields))
 
             schema.post(
@@ -120,3 +121,10 @@ export const OpesergooseFactory =
                 }
             })
         }
+
+
+export {
+    OpeserOptions,
+    OpeserModelType,
+    OpesergooseFactory,
+}
