@@ -1,6 +1,5 @@
 import { Types } from 'mongoose'
 import { PostQueryMiddleware, PreQueryMiddleware } from '../types/middlewares'
-import OpenSearchClient from '../utils/OpenSearchClient'
 
 export const saveInvolvedIds: PreQueryMiddleware = () =>
   async function (next) {
@@ -8,7 +7,7 @@ export const saveInvolvedIds: PreQueryMiddleware = () =>
     next()
   }
 
-export const postDeleteMany: PostQueryMiddleware = (index) =>
+export const postDeleteMany: PostQueryMiddleware = (OpenSearchClient, index ) =>
   async function (_res, next) {
     if (!this.involvedIds) return
 
@@ -16,7 +15,7 @@ export const postDeleteMany: PostQueryMiddleware = (index) =>
       delete: { _index: `${index}`, _id: id.toString() },
     }))
 
-    if (body.length) await OpenSearchClient.instance.bulk({ body })
+    if (body.length) await OpenSearchClient.bulk({ body })
 
     next()
   }

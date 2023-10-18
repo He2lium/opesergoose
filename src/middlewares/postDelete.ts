@@ -1,9 +1,8 @@
-import OpenSearchClient from '../utils/OpenSearchClient'
 import { PostQueryMiddleware } from '../types/middlewares'
 
-export const postDelete: PostQueryMiddleware = (index) =>
+export const postDelete: PostQueryMiddleware = (openSearchClient,index) =>
   async function (doc, next) {
-    await OpenSearchClient.instance.delete({
+    await openSearchClient.delete({
       index,
       id: doc.id,
       refresh: true,

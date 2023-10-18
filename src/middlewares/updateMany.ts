@@ -1,9 +1,8 @@
 import { HydratedDocument } from 'mongoose'
 import { PostQueryMiddleware } from '../types/middlewares'
 import { omitDoc } from '../utils/omitDoc'
-import OpenSearchClient from '../utils/OpenSearchClient'
 
-export const postUpdateMany: PostQueryMiddleware = (index, populates = [], forbiddenFields = []) =>
+export const postUpdateMany: PostQueryMiddleware = (openSearchClient, index, populates = [], forbiddenFields = []) =>
   async function (_res, next) {
     if (!this.involvedIds?.length) return
 
@@ -16,6 +15,6 @@ export const postUpdateMany: PostQueryMiddleware = (index, populates = [], forbi
       return [{ index: { _index: `${index}`, _id: document._id.toString() } }, omittedDoc]
     })
 
-    if (body.length) await OpenSearchClient.instance.bulk({ body })
+    if (body.length) await openSearchClient.bulk({ body })
     next()
   }
