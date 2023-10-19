@@ -11,14 +11,14 @@ import {OpeserModelType} from "./types/OpeserModel.type";
 
 
 const OpesergooseFactory =
-    (openSearchClient: Client) =>
+    (openSearchClient: Client, prefix?:string) =>
         async <DocumentType>(
             schema: Schema<DocumentType>,
             options: PluginOptions<DocumentType>
         ) => {
             const {mapProperties, index, populations, forbiddenFields} = options
 
-            const indexWithPrefix = `${process.env['OPENSEARCH_INDEX_PREFIX'] || ''}${index}`
+            const indexWithPrefix = `${prefix || process.env['OPENSEARCH_INDEX_PREFIX'] || ''}${index}`
 
             schema.pre(['updateMany', 'updateOne', 'deleteMany', 'deleteOne'], saveInvolvedIds())
 
