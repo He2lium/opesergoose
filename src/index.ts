@@ -8,6 +8,7 @@ import {OpeserOptions} from './types/OpeserOptions'
 import PluginOptions = OpeserOptions.PluginOptions
 import {Client} from "@opensearch-project/opensearch";
 import {OpeserModelType} from "./types/OpeserModel.type";
+import {OpeserStatic} from "./types/opeser-model.type";
 
 
 const OpesergooseFactory =
@@ -122,9 +123,9 @@ const OpesergooseFactory =
             })
         }
 
-
 export {
     OpeserOptions,
     OpeserModelType,
     OpesergooseFactory,
+    OpeserStatic
 }
