@@ -1,4 +1,4 @@
-import { Model, Schema } from 'mongoose'
+import { HydratedDocument, Model, Schema } from 'mongoose'
 import { postDeleteMany, saveInvolvedIds } from './middlewares/deleteMany'
 import { postDelete } from './middlewares/postDelete'
 import { postSave } from './middlewares/postSave'
@@ -13,7 +13,7 @@ import { omitDoc } from './utils/omitDoc'
 
 const OpesergooseFactory =
   (openSearchClient: Client, prefix?: string) =>
-  async <DocumentType extends Document>(
+  async <DocumentType extends HydratedDocument<unknown>>(
     schema: Schema<DocumentType>,
     options: PluginOptions<DocumentType>
   ) => {
@@ -53,8 +53,9 @@ const OpesergooseFactory =
           const body = []
           let count = 0
 
-          for await (const doc of this.find()) {
-            if (populations) doc.populate(populations)
+          const documents = await this.find().populate(populations || [])
+
+          for await (const doc of documents) {
             body.push(
               { index: { _index: createdIndexName, _id: doc.id } },
               omitDoc(doc, forbiddenFields)

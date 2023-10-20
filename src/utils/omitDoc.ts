@@ -1,4 +1,4 @@
-import { HydratedDocument } from 'mongoose'
+import { HydratedDocument, Types } from 'mongoose'
 import omitDeep from 'omit-deep'
 
 export const omitDoc = (doc: HydratedDocument<unknown>, forbiddenFields: string[] = []) =>
