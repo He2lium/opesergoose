@@ -51,16 +51,18 @@ const OpesergooseFactory =
 
         const syncCollection = async () => {
           const body = []
-          let count = 0
 
           const documents = await this.find().populate(populations || [])
+
+          const count = documents.length
+
+          if (!count) return count
 
           for await (const doc of documents) {
             body.push(
               { index: { _index: createdIndexName, _id: doc.id } },
               omitDoc(doc, forbiddenFields)
             )
-            count++
           }
 
           await openSearchClient.bulk({ body, refresh: true })
