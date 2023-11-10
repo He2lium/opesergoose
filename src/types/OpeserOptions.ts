@@ -1,4 +1,4 @@
-import { MappingProperty } from '@opensearch-project/opensearch/api/types'
+import { IndicesIndexSettings, MappingProperty } from '@opensearch-project/opensearch/api/types'
 import { PopulateOptions } from 'mongoose'
 
 export namespace OpeserOptions {
@@ -8,5 +8,6 @@ export namespace OpeserOptions {
     mapProperties?: OpeserMapProperties<DocumentType>
     populations?: PopulateOptions[]
     forbiddenFields?: string[]
+    settings: IndicesIndexSettings
   }
 }

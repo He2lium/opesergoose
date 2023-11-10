@@ -17,7 +17,7 @@ const OpesergooseFactory =
     schema: Schema<DocumentType>,
     options: PluginOptions<DocumentType>
   ) => {
-    const { mapProperties, index, populations, forbiddenFields } = options
+    const { mapProperties, index, populations, forbiddenFields, settings } = options
 
     const indexWithPrefix = `${prefix || process.env['OPENSEARCH_INDEX_PREFIX'] || ''}${index}`
 
@@ -80,6 +80,14 @@ const OpesergooseFactory =
                 body: { properties: mapProperties },
               })
 
+              if (settings) {
+                await openSearchClient.indices.close({ index: foundIndex })
+
+                await openSearchClient.indices.putSettings({ index: foundIndex, body: settings })
+
+                await openSearchClient.indices.open({ index: foundIndex })
+              }
+
               console.info(`successful ${foundIndex} index re-mapping`)
             } catch (e) {
               // If there is a conflict in mapping, create a new index
@@ -90,6 +98,7 @@ const OpesergooseFactory =
                   mappings: {
                     properties: mapProperties,
                   },
+                  settings,
                 },
               })
 
