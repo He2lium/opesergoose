@@ -58,7 +58,7 @@ const OpesergooseFactory =
 
           if (!count) return count
 
-          for await (const doc of documents) {
+          for (const doc of documents) {
             body.push(
               { index: { _index: createdIndexName, _id: doc.id } },
               omitDoc(doc, forbiddenFields)
@@ -83,7 +83,10 @@ const OpesergooseFactory =
               if (settings) {
                 await openSearchClient.indices.close({ index: foundIndex })
 
-                await openSearchClient.indices.putSettings({ index: foundIndex, body: settings })
+                await openSearchClient.indices.putSettings({
+                  index: foundIndex,
+                  body: { settings },
+                })
 
                 await openSearchClient.indices.open({ index: foundIndex })
               }
