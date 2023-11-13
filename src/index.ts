@@ -13,7 +13,7 @@ import { omitDoc } from './utils/omitDoc'
 
 const OpesergooseFactory =
   (openSearchClient: Client, prefix?: string) =>
-  async <DocumentType extends HydratedDocument<unknown>>(
+  <DocumentType extends HydratedDocument<unknown>>(
     schema: Schema<DocumentType>,
     options: PluginOptions<DocumentType>
   ) => {
@@ -41,100 +41,92 @@ const OpesergooseFactory =
     schema.post(['deleteMany', 'deleteOne'], postDeleteMany(openSearchClient, indexWithPrefix))
 
     schema.static('opeserIntegrity', async function (this: Model<DocumentType>) {
-      if (mapProperties) {
-        // Get indexes by pattern
-        const { body: foundIndexes } = await openSearchClient.indices.get({
-          index: `${indexWithPrefix}_*`,
-        })
+      if (!mapProperties) return
+      // Get indexes by pattern
+      const { body: foundIndexes } = await openSearchClient.indices.get({
+        index: `${indexWithPrefix}_*`,
+      })
 
-        const createdIndexName = `${indexWithPrefix}_${Date.now()}`
+      const createdIndexName = `${indexWithPrefix}_${Date.now()}`
 
-        const syncCollection = async () => {
-          const body = []
+      const syncCollection = async () => {
+        const body = []
 
-          const documents = await this.find().populate(populations || [])
+        const documents = await this.find().populate(populations || [])
 
-          const count = documents.length
+        const count = documents.length
 
-          if (!count) return count
+        if (!count) return count
 
-          for (const doc of documents) {
-            body.push(
-              { index: { _index: createdIndexName, _id: doc.id } },
-              omitDoc(doc, forbiddenFields)
-            )
-          }
-
-          await openSearchClient.bulk({ body, refresh: true })
-
-          return count
-        }
-
-        // Update or create index and mapping
-        if (Object.keys(foundIndexes).length) {
-          for (const foundIndex in foundIndexes) {
-            try {
-              // check that the new mapping does not conflict with the previous one
-              await openSearchClient.indices.putMapping({
-                index: foundIndex,
-                body: { properties: mapProperties },
-              })
-
-              if (settings) {
-                await openSearchClient.indices.close({ index: foundIndex })
-
-                await openSearchClient.indices.putSettings({
-                  index: foundIndex,
-                  body: { settings },
-                })
-
-                await openSearchClient.indices.open({ index: foundIndex })
-              }
-
-              console.info(`successful ${foundIndex} index re-mapping`)
-            } catch (e) {
-              // If there is a conflict in mapping, create a new index
-              await openSearchClient.indices.create({
-                index: createdIndexName,
-                body: {
-                  aliases: foundIndexes[foundIndex].aliases,
-                  mappings: {
-                    properties: mapProperties,
-                  },
-                  settings,
-                },
-              })
-
-              const count = await syncCollection()
-
-              await openSearchClient.indices.delete({
-                index: foundIndex,
-              })
-
-              console.info(
-                `index [${foundIndex}] was deleted. A new index [${createdIndexName}] was created and ${count} documents were added`
-              )
-            }
-          }
-        } else {
-          await openSearchClient.indices.create({
-            index: createdIndexName,
-            body: {
-              aliases: {
-                [indexWithPrefix]: {},
-              },
-              mappings: {
-                properties: mapProperties,
-              },
-            },
-          })
-
-          const count = await syncCollection()
-
-          console.info(
-            `a new index [${createdIndexName}] was created and ${count} documents were added`
+        for (const doc of documents) {
+          body.push(
+            { index: { _index: createdIndexName, _id: doc.id } },
+            omitDoc(doc, forbiddenFields)
           )
         }
+
+        await openSearchClient.bulk({ body })
+
+        return count
+      }
+
+      // Update or create index and mapping
+      if (Object.keys(foundIndexes).length) {
+        for (const foundIndex in foundIndexes) {
+          try {
+            // check that the new mapping does not conflict with the previous one
+            await openSearchClient.indices.putMapping({
+              index: foundIndex,
+              body: { properties: mapProperties },
+            })
+
+            if (settings) {
+              await openSearchClient.indices.close({ index: foundIndex })
+
+              await openSearchClient.indices.putSettings({
+                index: foundIndex,
+                body: { settings },
+              })
+
+              await openSearchClient.indices.open({ index: foundIndex })
+            }
+
+            console.info(`successful ${foundIndex} index re-mapping`)
+          } catch (e) {
+            // If there is a conflict in mapping, create a new index
+            await openSearchClient.indices.create({
+              index: createdIndexName,
+              body: {
+                aliases: foundIndexes[foundIndex].aliases,
+                mappings: { properties: mapProperties },
+                settings,
+              },
+            })
+
+            const count = await syncCollection()
+
+            await openSearchClient.indices.delete({ index: foundIndex })
+
+            console.info(
+              `index [${foundIndex}] was deleted. A new index [${createdIndexName}] was created and ${count} documents were added`
+            )
+          }
+        }
+      } else {
+        await openSearchClient.indices.create({
+          index: createdIndexName,
+          body: {
+            aliases: { [indexWithPrefix]: {} },
+            mappings: { properties: mapProperties },
+            settings,
+          },
+        })
+
+        const count = await syncCollection()
+
+        console.info(
+          `a new index [${createdIndexName}] was created and ${count} documents were added`
+        )
       }
     })
   }
