@@ -83,10 +83,14 @@ const OpesergooseFactory =
             if (settings) {
               await openSearchClient.indices.close({ index: foundIndex })
 
-              await openSearchClient.indices.putSettings({
-                index: foundIndex,
-                body: { settings },
-              })
+              try {
+                await openSearchClient.indices.putSettings({
+                  index: foundIndex,
+                  body: { settings },
+                })
+              } catch (error) {
+                console.log(error)
+              }
 
               await openSearchClient.indices.open({ index: foundIndex })
             }
