@@ -89,7 +89,8 @@ const OpesergooseFactory =
                   body: { settings },
                 })
               } catch (error) {
-                console.log(error)
+                // no settings to update
+                // console.info(error)
               }
 
               await openSearchClient.indices.open({ index: foundIndex })
