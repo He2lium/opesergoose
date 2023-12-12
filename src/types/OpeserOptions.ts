@@ -8,6 +8,6 @@ export namespace OpeserOptions {
     mapProperties?: OpeserMapProperties<DocumentType>
     populations?: PopulateOptions[]
     forbiddenFields?: string[]
-    settings: IndicesIndexSettings
+    settings?: IndicesIndexSettings
   }
 }
