@@ -15,7 +15,7 @@ const OpesergooseFactory =
   (openSearchClient: Client, prefix?: string) =>
   <DocumentType extends HydratedDocument<unknown>>(
     schema: Schema<DocumentType>,
-    options: PluginOptions<DocumentType>
+    options: PluginOptions<DocumentType>,
   ) => {
     const { mapProperties, index, populations, forbiddenFields, settings } = options
 
@@ -25,18 +25,18 @@ const OpesergooseFactory =
 
     schema.post(['save'], postSave(openSearchClient, indexWithPrefix, populations, forbiddenFields))
     schema.post(
-      ['findOneAndUpdate'],
-      postUpdate(openSearchClient, indexWithPrefix, populations, forbiddenFields)
+      ['findOneAndUpdate', 'findOneAndReplace'],
+      postUpdate(openSearchClient, indexWithPrefix, populations, forbiddenFields),
     )
 
     schema.post(
       ['updateMany', 'updateOne'],
-      postUpdateMany(openSearchClient, indexWithPrefix, populations, forbiddenFields)
+      postUpdateMany(openSearchClient, indexWithPrefix, populations, forbiddenFields),
     )
 
     schema.post(
       ['findOneAndDelete', 'findOneAndRemove'],
-      postDelete(openSearchClient, indexWithPrefix)
+      postDelete(openSearchClient, indexWithPrefix),
     )
     schema.post(['deleteMany', 'deleteOne'], postDeleteMany(openSearchClient, indexWithPrefix))
 
@@ -61,7 +61,7 @@ const OpesergooseFactory =
         for (const doc of documents) {
           body.push(
             { index: { _index: createdIndexName, _id: doc.id } },
-            omitDoc(doc, forbiddenFields)
+            omitDoc(doc, forbiddenFields),
           )
         }
 
@@ -113,7 +113,7 @@ const OpesergooseFactory =
             await openSearchClient.indices.delete({ index: foundIndex })
 
             console.info(
-              `index [${foundIndex}] was deleted. A new index [${createdIndexName}] was created and ${count} documents were added`
+              `index [${foundIndex}] was deleted. A new index [${createdIndexName}] was created and ${count} documents were added`,
             )
           }
         }
@@ -130,7 +130,7 @@ const OpesergooseFactory =
         const count = await syncCollection()
 
         console.info(
-          `a new index [${createdIndexName}] was created and ${count} documents were added`
+          `a new index [${createdIndexName}] was created and ${count} documents were added`,
         )
       }
     })
